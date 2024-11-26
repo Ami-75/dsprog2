@@ -1,0 +1,253 @@
+# mathライブラリをインポート
+import math  
+import flet as ft
+
+# カスタムボタンのベースクラス
+class CalcButton(ft.ElevatedButton):
+
+    # _init_はクラスの初期化メソッド
+
+    # クラスとは、オブジェクト指向プログラミングにおいて、オブジェクトを生成するための設計図のこと
+    # オブジェクトとは、プログラム内でデータや処理をまとめたもの
+    # メソッドとは、クラス内で定義される関数のこと
+
+    # クラスの初期化メソッドとは、クラスがインスタンス化(設計図を元にしてデータや処理をまとめたものを生成すること)された際に自動的に呼び出される関数
+    # インスタンスとは、クラスの設計図をもとにして生成されたデータや処理のこと
+    # 設計図をもとにしてデータや処理をまとめることで、設計図内で定義された関数や属性を持つオブジェクトが生成される
+    
+    # selfは、クラスのインスタンス自身を指す
+    # textは、ボタンに表示されるテキスト
+    # button_clickedは、ボタンがクリックされたときに呼び出される関数
+    # expandは、ボタンの幅を調整するためのパラメータ 
+    def __init__(self, text, button_clicked, expand=1):
+        super().__init__()
+        # self.を先頭につける意味は、クラス内で使われる変数を示す
+        # self.textは、ボタンに表示されるテキスト
+        self.text = text
+        # self.expandは、ボタンの幅を調整するためのパラメータ
+        self.expand = expand
+        # self.on_clickは、ボタンがクリックされたときに呼び出される関数
+        self.on_click = button_clicked
+        # self.widthは、ボタンの幅
+        self.width = 70
+        # self.dataは、ボタンに関連付けられたデータ
+        self.data = text
+        # (self.bgcolorは、ボタンの背景色)
+
+
+# 数字ボタンのクラス
+class DigitButton(CalcButton):
+    def __init__(self, text, button_clicked, expand=1):
+        CalcButton.__init__(self, text, button_clicked, expand)
+        self.bgcolor = ft.colors.WHITE24
+        self.color = ft.colors.WHITE
+
+
+# 操作ボタンのクラス
+class ActionButton(CalcButton):
+    def __init__(self, text, button_clicked):
+        CalcButton.__init__(self, text, button_clicked)
+        self.bgcolor = ft.colors.ORANGE
+        self.width = 70
+        self.color = ft.colors.WHITE
+
+
+# 特殊操作ボタンのクラス
+class ExtraActionButton(CalcButton):
+    def __init__(self, text, button_clicked):
+        CalcButton.__init__(self, text, button_clicked)
+        self.bgcolor = ft.colors.BLUE_GREY_100
+        self.width = 70
+        self.color = ft.colors.BLACK
+
+
+# 電卓アプリケーションクラス
+class CalculatorApp(ft.Container):
+    def __init__(self):
+        super().__init__()
+        self.reset()
+
+        self.result = ft.Text(value="0", color=ft.colors.WHITE, size=20)
+        self.width = 450
+        self.bgcolor = ft.colors.BLACK
+        self.border_radius = ft.border_radius.all(20)
+        self.padding = 20
+
+        # ボタンレイアウトの設定
+        self.content = ft.Column(
+            controls=[
+                ft.Row(controls=[self.result], alignment="end"),
+                ft.Row(
+                    controls=[
+                        ExtraActionButton(
+                            text="AC", button_clicked=self.button_clicked
+                        ),
+                        ExtraActionButton(
+                            text="+/-", button_clicked=self.button_clicked
+                        ),
+                        ExtraActionButton(text="%", button_clicked=self.button_clicked),
+                        ActionButton(text="/", button_clicked=self.button_clicked),
+                    ]
+                ),
+                ft.Row(
+                    controls=[
+                        DigitButton(text="7", button_clicked=self.button_clicked),
+                        DigitButton(text="8", button_clicked=self.button_clicked),
+                        DigitButton(text="9", button_clicked=self.button_clicked),
+                        ActionButton(text="*", button_clicked=self.button_clicked),
+                    ]
+                ),
+                ft.Row(
+                    controls=[
+                        DigitButton(text="4", button_clicked=self.button_clicked),
+                        DigitButton(text="5", button_clicked=self.button_clicked),
+                        DigitButton(text="6", button_clicked=self.button_clicked),
+                        ActionButton(text="-", button_clicked=self.button_clicked),
+                    ]
+                ),
+                ft.Row(
+                    controls=[
+                        DigitButton(text="1", button_clicked=self.button_clicked),
+                        DigitButton(text="2", button_clicked=self.button_clicked),
+                        DigitButton(text="3", button_clicked=self.button_clicked),
+                        ActionButton(text="+", button_clicked=self.button_clicked),
+                    ]
+                ),
+                ft.Row(
+                    controls=[
+                        DigitButton(
+                            text="0", expand=2, button_clicked=self.button_clicked
+                        ),
+                        DigitButton(text=".", button_clicked=self.button_clicked),
+                        ActionButton(text="=", button_clicked=self.button_clicked),
+                    ]
+                ),
+                # 新しく右側に縦に並べる列
+                ft.Column(
+                    controls=[
+                        ActionButton(
+                            text="X²", button_clicked=self.button_clicked
+                        ),
+                        ActionButton(
+                            text="X³", button_clicked=self.button_clicked
+                        ),
+                        ActionButton(
+                            text="(", button_clicked=self.button_clicked
+                        ),
+                        ActionButton(
+                            text=")", button_clicked=self.button_clicked
+                        ),
+                        ActionButton(
+                            text="π", button_clicked=self.button_clicked
+                        ),
+                        ActionButton(
+                            text="10^X", button_clicked=self.button_clicked
+                        ),
+                    ],
+                    expand=1,  # 列全体を縦に配置
+                ),
+            ]
+        )
+
+    # ボタンクリック時の動作
+    def button_clicked(self, e):
+        data = e.control.data
+        print(f"Button clicked with data = {data}")
+        # もし、結果がエラーだった場合、または、ACボタンが押された場合
+        if self.result.value == "Error" or data == "AC":
+            # 結果を0にする
+            self.result.value = "0"
+            self.reset()
+
+        elif data in ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "."):
+            # もし、結果が0だった場合、または、新しいオペランドがある場合
+            # オペランドとは、演算子によって計算される数値のこと
+            if self.result.value == "0" or self.new_operand:
+                self.result.value = data
+                self.new_operand = False
+            else:
+                self.result.value = self.result.value + data
+
+        # もし、データが演算子だった場合
+        elif data in ("+", "-", "*", "/"):
+            # 結果を計算する
+            self.result.value = self.calculate(
+                self.operand1, float(self.result.value), self.operator
+            )
+            self.operator = data
+            if self.result.value == "Error":
+                self.operand1 = "0"
+            else:
+                self.operand1 = float(self.result.value)
+            self.new_operand = True
+
+        elif data == "=":
+            self.result.value = self.calculate(
+                self.operand1, float(self.result.value), self.operator
+            )
+            self.reset()
+
+        elif data == "%":
+            self.result.value = float(self.result.value) / 100
+            self.reset()
+
+        elif data == "+/-":
+            if float(self.result.value) > 0:
+                self.result.value = "-" + self.result.value
+            elif float(self.result.value) < 0:
+                self.result.value = str(self.format_number(abs(float(self.result.value))))
+
+        # 新しい機能の動作
+        elif data == "X²":
+            self.result.value = str(self.format_number(float(self.result.value) ** 2))
+        elif data == "X³":
+            self.result.value = str(self.format_number(float(self.result.value) ** 3))
+        elif data == "π":
+            self.result.value = str(self.format_number(math.pi))
+        elif data == "10^X":
+            self.result.value = str(self.format_number(10 ** float(self.result.value)))
+        elif data == "(" or data == ")":
+            if self.result.value == "0" or self.new_operand:
+                self.result.value = data
+            else:
+                self.result.value += data
+
+        self.update()
+
+    # 結果を更新する
+    def format_number(self, num):
+        if num % 1 == 0:
+            return int(num)
+        else:
+            return num
+
+    # 計算を行う
+    def calculate(self, operand1, operand2, operator):
+        if operator == "+":
+            return self.format_number(operand1 + operand2)
+        elif operator == "-":
+            return self.format_number(operand1 - operand2)
+        elif operator == "*":
+            return self.format_number(operand1 * operand2)
+        elif operator == "/":
+            if operand2 == 0:
+                return "Error"
+            else:
+                return self.format_number(operand1 / operand2)
+
+    # リセットする
+    def reset(self):
+        self.operator = "+"
+        self.operand1 = 0
+        self.new_operand = True
+
+
+# メイン関数
+def main(page: ft.Page):
+    page.title = "Calc App"
+    calc = CalculatorApp()
+    page.add(calc)
+
+
+ft.app(target=main)
+

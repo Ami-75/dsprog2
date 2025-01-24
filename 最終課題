@@ -1,0 +1,86 @@
+import time
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as Ec
+from selenium.webdriver.support.ui import Select
+from bs4 import BeautifulSoup
+
+# Seleniumの設定
+options = Options()
+options.add_argument('--headless')  # ヘッドレスモード（ブラウザを表示しない）
+options.add_argument('--no-sandbox')
+options.add_argument('--disable-dev-shm-usage')
+
+# WebDriverの起動
+driver = webdriver.Chrome(options=options)
+url = "https://www.hellowork.mhlw.go.jp/index.html"
+
+try:
+    driver.get(url)
+    WebDriverWait(driver, 10).until(Ec.presence_of_element_located((By.LINK_TEXT, "求人情報検索")))
+    driver.find_element(By.LINK_TEXT, "求人情報検索").click()
+    time.sleep(1)
+    
+    # 「求人区分」の選択
+    WebDriverWait(driver, 10).until(Ec.presence_of_element_located((By.ID, "ID_jobMethod")))
+    driver.find_element(By.ID, "ID_jobMethod").click()  # 「障害のある方のための求人」を選択
+    time.sleep(1)
+    
+    # 「就業場所」の選択
+    WebDriverWait(driver, 10).until(Ec.presence_of_element_located((By.ID, "ID_kenSel")))
+    select = Select(driver.find_element(By.ID, "ID_kenSel"))
+    select.select_by_visible_text("東京都")
+    time.sleep(1)
+    
+    # 「雇用形態」の選択
+    WebDriverWait(driver, 10).until(Ec.presence_of_element_located((By.ID, "ID_employment")))
+    select = Select(driver.find_element(By.ID, "ID_employment"))
+    select.select_by_visible_text("正社員")
+    time.sleep(1)
+    
+    # 検索実行
+    driver.find_element(By.ID, "ID_searchBtn").click()
+    time.sleep(5)  # 検索結果が表示されるのを待つ
+
+    # 検索結果ページのHTMLを取得
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+
+    # 結果の解析
+    tables = soup.find_all('table', class_='kyujin')  # 求人情報テーブル
+
+    # フィルタリングに使用するキーワード
+    customer_service_keywords = ["接客", "営業", "電話"]  # 接客業
+    office_work_keywords = ["事務", "作業"]  # 事務作業
+
+    customer_service_jobs = []  # 接客業のリスト
+    office_work_jobs = []  # 事務作業のリスト
+
+    for table in tables:
+        # 職種と仕事の内容を取得
+        job_title = table.find('td', class_='job-title').get_text(strip=True)
+        job_description = table.find('td', class_='job-description').get_text(strip=True)
+
+        # 両方のフィルタリング条件に一致するかチェック
+        all_text = f"{job_title} {job_description}"
+        if any(keyword in all_text for keyword in customer_service_keywords):
+            customer_service_jobs.append({"職種": job_title, "内容": job_description})
+        elif any(keyword in all_text for keyword in office_work_keywords):
+            office_work_jobs.append({"職種": job_title, "内容": job_description})
+
+    # 結果を表示
+    print(f"接客業の求人件数: {len(customer_service_jobs)}")
+    print(f"事務作業の求人件数: {len(office_work_jobs)}")
+
+    # 詳細データを表示（必要に応じてコメントアウト）
+    print("\n接客業の求人一覧:")
+    for job in customer_service_jobs:
+        print(f"職種: {job['職種']}, 内容: {job['内容']}")
+
+    print("\n事務作業の求人一覧:")
+    for job in office_work_jobs:
+        print(f"職種: {job['職種']}, 内容: {job['内容']}")
+
+finally:
+    driver.quit()
